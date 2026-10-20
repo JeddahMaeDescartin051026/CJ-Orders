@@ -62,3 +62,5 @@ button, input { font: inherit; }
 .summary { display: flex; justify-content: space-between; padding: 16px 22px; background: var(--pink); }
 .sold { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 20px; font-size: 14px; }
 .sold-right { display: grid; text-align: right; gap: 2px; white-space: nowrap; }
+
+.header-actions { display: flex; flex-wrap: wrap; gap: 8px; }
