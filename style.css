@@ -1,0 +1,55 @@
+:root {
+  --bg: #f8f1e9; --pink: #eed5d0; --rose: #b47d85; --mauve: #783b50; --blush: #c68183;
+  --card: #fffdfa; --ink: #603344; --muted: #8b7479; --line: rgba(120,59,80,.14);
+  --done: #4f8a6b; --not: #b8505f; --other: #b58a3c;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "DM Sans", sans-serif; -webkit-font-smoothing: antialiased; }
+button, input { font: inherit; }
+[hidden] { display: none !important; }
+.brand { font-family: "Playfair Display", serif; font-style: italic; font-size: 26px; color: var(--mauve); white-space: nowrap; }
+.muted { color: var(--muted); font-size: 14px; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 18px 50px rgba(91,45,61,.10); }
+
+.login { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+.login-card { width: min(380px, 100%); padding: 30px; display: grid; gap: 8px; }
+.login-card label { font-size: 12px; font-weight: 600; margin-top: 6px; }
+.login-card input { padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); }
+.login-card .btn { margin-top: 12px; }
+.error { color: #9b2c3f; font-size: 12px; margin: 6px 0 0; }
+
+.btn { border: 1px solid var(--mauve); background: transparent; color: var(--mauve); border-radius: 999px; padding: 10px 18px; font-size: 12px; font-weight: 700; letter-spacing: .04em; cursor: pointer; transition: background .2s, color .2s, opacity .2s; }
+.btn:hover { background: var(--pink); }
+.btn.primary { background: var(--mauve); color: #fff; }
+.btn.primary:hover { opacity: .88; background: var(--mauve); }
+.btn.ghost { border-color: var(--line); }
+
+.site-header { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding: 14px clamp(16px, 4vw, 56px); background: rgba(248,241,233,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 9px 16px; font-size: 12px; font-weight: 700; letter-spacing: .03em; cursor: pointer; }
+.tab span { margin-left: 6px; padding: 1px 8px; border-radius: 999px; background: var(--pink); font-size: 11px; }
+.tab.active { background: var(--mauve); border-color: var(--mauve); color: #fff; }
+.tab.active span { background: rgba(255,255,255,.25); }
+
+.orders { max-width: 900px; margin: 0 auto; padding: 24px clamp(16px, 4vw, 40px) 80px; display: grid; gap: 16px; }
+.empty { text-align: center; color: var(--muted); padding: 50px 0; }
+.order { padding: 22px; }
+.order-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: center; margin-bottom: 14px; }
+.order-date { font-size: 13px; color: var(--muted); }
+.badge { padding: 4px 12px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .05em; color: #fff; }
+.badge.COMPLETED { background: var(--done); }
+.badge.NOT-COMPLETED { background: var(--not); }
+.badge.OTHER { background: var(--other); }
+.details { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 14px; font-size: 14px; }
+.details dt { color: var(--muted); font-size: 12px; padding-top: 2px; }
+.details dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+.items { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 0; margin-bottom: 14px; font-size: 14px; }
+.item { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+.total { display: flex; justify-content: space-between; font-weight: 700; padding-top: 8px; }
+.note { width: 100%; padding: 10px 12px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font-size: 13px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions .btn { flex: 1 1 140px; }
+.actions .btn[data-s="COMPLETED"].on { background: var(--done); border-color: var(--done); color: #fff; }
+.actions .btn[data-s="NOT COMPLETED"].on { background: var(--not); border-color: var(--not); color: #fff; }
+.actions .btn[data-s="OTHER"].on { background: var(--other); border-color: var(--other); color: #fff; }
+@media (max-width: 560px) { .details { grid-template-columns: 1fr; gap: 0; } .details dd { margin-bottom: 8px; } }
