@@ -107,7 +107,7 @@ function announce(o) {
   flashTitle();
 }
 
-if ($("alerts")) $("alerts").addEventListener("click", async () => {
+$("alerts").addEventListener("click", async () => {
   alertsOn = !alertsOn;
   try { localStorage.setItem("cj-orders-alerts", alertsOn ? "on" : "off"); } catch (e) {}
   if (alertsOn) {
@@ -128,19 +128,7 @@ $("login-form").addEventListener("submit", async (e) => {
   try {
     await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
   } catch (err) {
-    const code = (err && err.code) || "";
-    const reasons = {
-      "auth/invalid-credential": "Wrong email or password.",
-      "auth/wrong-password": "Wrong email or password.",
-      "auth/user-not-found": "Wrong email or password.",
-      "auth/invalid-email": "That email address isn't valid.",
-      "auth/too-many-requests": "Too many tries. Wait a few minutes and try again.",
-      "auth/network-request-failed": "No internet connection.",
-      "auth/unauthorized-domain": "This website address isn't allowed yet. Add it in Firebase: Authentication > Settings > Authorized domains.",
-      "auth/operation-not-allowed": "Email/Password sign-in isn't turned on in Firebase (Authentication > Sign-in method).",
-      "auth/invalid-api-key": "The Firebase settings in firebase-config.js are wrong."
-    };
-    $("login-error").textContent = (reasons[code] || "Couldn't sign in.") + (code ? " (" + code + ")" : "");
+    $("login-error").textContent = "Couldn't sign in. Check your email and password.";
     $("login-error").hidden = false;
   }
 });
