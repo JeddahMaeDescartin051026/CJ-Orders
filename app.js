@@ -13,6 +13,7 @@ const LABELS = { SUCCESSFUL: "SUCCESSFUL ORDERS" };
 let orders = [];
 let filter = "ALL";
 let unsubscribe = null;
+let firstSnapshot = true;
 
 const $ = (id) => document.getElementById(id);
 const money = (v) => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP", maximumFractionDigits: 0 }).format(v || 0);
@@ -28,6 +29,97 @@ function phTime(ts) {
   if (!ts || !ts.toDate) return "Just now";
   return ts.toDate().toLocaleString("en-PH", { timeZone: "Asia/Manila", dateStyle: "medium", timeStyle: "short" }) + " (PH time)";
 }
+
+// ---------- new-order alerts (sound + pop-up while this page is open) ----------
+let alertsOn = false;
+try { alertsOn = localStorage.getItem("cj-orders-alerts") === "on"; } catch (e) {}
+let audioCtx = null;
+let flashTimer = null;
+
+function pendingTitle() {
+  const pending = orders.filter((o) => o.status === "NOT COMPLETED").length;
+  return (pending ? "(" + pending + ") " : "") + "CJ Orders";
+}
+
+function updateAlertBtn() {
+  const b = $("alerts");
+  if (!b) return;
+  const soundReady = audioCtx && audioCtx.state === "running";
+  let label = "🔔 Turn on alerts";
+  if (alertsOn) {
+    label = soundReady ? "🔔 Alerts on" : "🔔 Alerts on · click page for sound";
+    if ("Notification" in window && Notification.permission === "denied") label += " · pop-ups blocked";
+  }
+  b.textContent = label;
+}
+
+// Browsers only allow sound after a click, so any click on the page switches it on
+function unlockAudio() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!audioCtx) { audioCtx = new AC(); audioCtx.onstatechange = updateAlertBtn; }
+    if (audioCtx.state === "suspended") audioCtx.resume().then(updateAlertBtn).catch(() => {});
+  } catch (e) {}
+  updateAlertBtn();
+}
+document.addEventListener("click", unlockAudio);
+
+function chime() {
+  if (!audioCtx || audioCtx.state !== "running") return;
+  [[880, 0], [1175, 0.18]].forEach((n) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const t = audioCtx.currentTime + n[1];
+    osc.type = "sine";
+    osc.frequency.value = n[0];
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.65);
+  });
+}
+
+function flashTitle() {
+  if (!document.hidden || flashTimer) return;
+  let on = true;
+  document.title = "🔔 New order!";
+  flashTimer = setInterval(() => { document.title = on ? pendingTitle() : "🔔 New order!"; on = !on; }, 1000);
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && flashTimer) { clearInterval(flashTimer); flashTimer = null; document.title = pendingTitle(); }
+});
+
+function announce(o) {
+  if (!alertsOn) return;
+  const qty = (o.items || []).reduce((n, i) => n + (i.quantity || 0), 0);
+  const body = (o.name || "Someone") + " · " + qty + (qty === 1 ? " item" : " items") + " · " + money(o.total);
+  chime();
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      const note = new Notification("New order on CJ Finds", { body: body, tag: o.id });
+      note.onclick = () => { window.focus(); note.close(); };
+    } catch (e) { /* some phones don't allow pop-ups from a page; the sound and tab title still work */ }
+  }
+  flashTitle();
+}
+
+$("alerts").addEventListener("click", async () => {
+  alertsOn = !alertsOn;
+  try { localStorage.setItem("cj-orders-alerts", alertsOn ? "on" : "off"); } catch (e) {}
+  if (alertsOn) {
+    unlockAudio();
+    if ("Notification" in window && Notification.permission === "default") {
+      try { await Notification.requestPermission(); } catch (e) {}
+    }
+    setTimeout(chime, 250); // short test sound
+  }
+  updateAlertBtn();
+});
+updateAlertBtn();
 
 // ---------- login ----------
 $("login-form").addEventListener("submit", async (e) => {
@@ -47,9 +139,16 @@ onAuthStateChanged(auth, (user) => {
   $("app-view").hidden = !user;
   if (unsubscribe) { unsubscribe(); unsubscribe = null; }
   if (!user) { orders = []; return; }
+  firstSnapshot = true;
   unsubscribe = onSnapshot(
     query(collection(db, "orders"), orderBy("createdAt", "desc")),
     (snap) => {
+      if (!firstSnapshot) {
+        snap.docChanges().forEach((ch) => {
+          if (ch.type === "added" && !ch.doc.metadata.hasPendingWrites) announce(Object.assign({ id: ch.doc.id }, ch.doc.data()));
+        });
+      }
+      firstSnapshot = false;
       orders = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
       render();
     },
@@ -210,8 +309,7 @@ function soldCard(r) {
 
 function render() {
   renderTabs();
-  const pending = orders.filter((o) => o.status === "NOT COMPLETED").length;
-  document.title = (pending ? "(" + pending + ") " : "") + "CJ Orders";
+  if (!flashTimer) document.title = pendingTitle();
   const box = $("orders");
   box.replaceChildren();
 
